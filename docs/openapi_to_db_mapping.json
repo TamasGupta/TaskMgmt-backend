@@ -1,0 +1,336 @@
+{
+  "info": {
+    "title": "LinkDem API → DB Mapping",
+    "version": "1.0.0",
+    "notes": "OpenAPI.json is treated as source-of-truth. PRD used for intent and constraints; mismatches flagged below."
+  },
+  "schemas": {
+    "User": {
+      "openapi_schema_ref": "#/components/schemas/User",
+      "table": "users",
+      "fields": {
+        "id": {
+          "param_type": "string/uuid",
+          "db_field": "users.id",
+          "notes": "If created by API, map to users.id; if mapped to Supabase auth user, populate auth_uid"
+        },
+        "name": { "param_type": "string", "db_field": "users.name" },
+        "email": { "param_type": "string/email", "db_field": "users.email" },
+        "roleId": {
+          "param_type": "string/uuid",
+          "db_field": "role_members.role_id",
+          "notes": "role membership: insert row into role_members linking users.id and roleId"
+        },
+        "isActive": { "param_type": "boolean", "db_field": "users.is_active" },
+        "createdAt": {
+          "param_type": "string/date-time",
+          "db_field": "users.created_at"
+        }
+      }
+    },
+    "Role": {
+      "openapi_schema_ref": "#/components/schemas/Role",
+      "table": "roles",
+      "fields": {
+        "id": { "param_type": "string/uuid", "db_field": "roles.id" },
+        "name": { "param_type": "string", "db_field": "roles.name" },
+        "permissions": {
+          "param_type": "array",
+          "db_field": "permissions & role_permissions",
+          "notes": "Each permission object -> permissions table (resource, action) and role_permissions linking"
+        }
+      }
+    },
+    "Permission": {
+      "openapi_schema_ref": "#/components/schemas/Permission",
+      "table": "permissions",
+      "fields": {
+        "resource": {
+          "param_type": "string",
+          "db_field": "permissions.resource"
+        },
+        "action": {
+          "param_type": "string(enum)",
+          "db_field": "permissions.action"
+        }
+      }
+    },
+    "Event": {
+      "openapi_schema_ref": "#/components/schemas/Event",
+      "table": "events",
+      "fields": {
+        "id": { "param_type": "uuid", "db_field": "events.id" },
+        "name": { "param_type": "string", "db_field": "events.name" },
+        "description": {
+          "param_type": "string",
+          "db_field": "events.description"
+        },
+        "workflowId": {
+          "param_type": "uuid",
+          "db_field": "events.workflow_id"
+        },
+        "status": { "param_type": "string", "db_field": "events.status" },
+        "createdBy": { "param_type": "uuid", "db_field": "events.created_by" },
+        "createdAt": {
+          "param_type": "date-time",
+          "db_field": "events.created_at"
+        }
+      }
+    },
+    "Task": {
+      "openapi_schema_ref": "#/components/schemas/Task",
+      "table": "tasks",
+      "fields": {
+        "id": { "param_type": "uuid", "db_field": "tasks.id" },
+        "eventId": { "param_type": "uuid", "db_field": "tasks.event_id" },
+        "title": { "param_type": "string", "db_field": "tasks.title" },
+        "description": {
+          "param_type": "string",
+          "db_field": "tasks.description"
+        },
+        "assigneeId": { "param_type": "uuid", "db_field": "tasks.assignee_id" },
+        "state": {
+          "param_type": "string",
+          "db_field": "tasks.state_key",
+          "notes": "maps to workflow_states.key; ensure workflow integrity in API"
+        },
+        "priority": { "param_type": "enum", "db_field": "tasks.priority" },
+        "dueDate": { "param_type": "date-time", "db_field": "tasks.due_date" },
+        "createdAt": {
+          "param_type": "date-time",
+          "db_field": "tasks.created_at"
+        }
+      }
+    },
+    "Workflow": {
+      "openapi_schema_ref": "#/components/schemas/Workflow",
+      "tables": [
+        "workflows",
+        "workflow_states",
+        "workflow_transitions",
+        "transition_allowed_roles"
+      ],
+      "fields": {
+        "id": { "param_type": "uuid", "db_field": "workflows.id" },
+        "name": { "param_type": "string", "db_field": "workflows.name" },
+        "states": {
+          "param_type": "array",
+          "db_field": "workflow_states (key, name, type)"
+        },
+        "transitions": {
+          "param_type": "array",
+          "db_field": "workflow_transitions & transition_allowed_roles"
+        }
+      }
+    },
+    "WorkflowState": {
+      "openapi_schema_ref": "#/components/schemas/WorkflowState",
+      "table": "workflow_states",
+      "fields": {
+        "id": {
+          "param_type": "string",
+          "db_field": "workflow_states.key (or id if present)"
+        },
+        "name": { "param_type": "string", "db_field": "workflow_states.name" },
+        "type": { "param_type": "enum", "db_field": "workflow_states.type" }
+      }
+    },
+    "WorkflowTransition": {
+      "openapi_schema_ref": "#/components/schemas/WorkflowTransition",
+      "table": "workflow_transitions",
+      "fields": {
+        "from": {
+          "param_type": "string",
+          "db_field": "workflow_transitions.from_state_key"
+        },
+        "to": {
+          "param_type": "string",
+          "db_field": "workflow_transitions.to_state_key"
+        },
+        "allowedRoles": {
+          "param_type": "array",
+          "db_field": "transition_allowed_roles -> role_id"
+        },
+        "autoCreateTasks": {
+          "param_type": "array",
+          "db_field": "workflow_transitions.auto_create_tasks (jsonb), processed at API"
+        }
+      }
+    },
+    "AuditLog": {
+      "openapi_schema_ref": "#/components/schemas/AuditLog",
+      "table": "audit_logs",
+      "fields": {
+        "id": { "param_type": "uuid", "db_field": "audit_logs.id" },
+        "taskId": { "param_type": "uuid", "db_field": "audit_logs.task_id" },
+        "eventId": { "param_type": "uuid", "db_field": "audit_logs.event_id" },
+        "fromState": {
+          "param_type": "string",
+          "db_field": "audit_logs.from_state"
+        },
+        "toState": {
+          "param_type": "string",
+          "db_field": "audit_logs.to_state"
+        },
+        "performedBy": {
+          "param_type": "uuid",
+          "db_field": "audit_logs.performed_by"
+        },
+        "comment": { "param_type": "string", "db_field": "audit_logs.comment" },
+        "warning": {
+          "param_type": "boolean",
+          "db_field": "audit_logs.warning"
+        },
+        "timestamp": {
+          "param_type": "date-time",
+          "db_field": "audit_logs.created_at"
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "method": "post",
+      "request": {
+        "body": {
+          "email": {
+            "param_type": "string",
+            "maps_to": "n/a (auth via Supabase Auth). Create/verify users.email in users table as profile."
+          },
+          "password": {
+            "param_type": "string",
+            "maps_to": "n/a (auth handled by Auth service)"
+          }
+        }
+      },
+      "response": {
+        "200": {
+          "maps_to": "AuthResponse (token + user) -> user maps to users table as profile"
+        }
+      }
+    },
+    "/users": {
+      "method": "get",
+      "parameters": {},
+      "response": {
+        "200": {
+          "maps_to": "SELECT * FROM users WHERE RLS allows access (see policies)"
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "parameters": {},
+        "response": {
+          "200": {
+            "maps_to": "events table (events.*), API should join workflows and counts"
+          }
+        }
+      },
+      "post": {
+        "request": {
+          "body": {
+            "id": {
+              "param_type": "uuid",
+              "maps_to": "events.id (or generated)"
+            },
+            "name": { "param_type": "string", "maps_to": "events.name" },
+            "description": {
+              "param_type": "string",
+              "maps_to": "events.description"
+            },
+            "workflowId": {
+              "param_type": "uuid",
+              "maps_to": "events.workflow_id"
+            },
+            "status": { "param_type": "string", "maps_to": "events.status" },
+            "createdBy": {
+              "param_type": "uuid",
+              "maps_to": "events.created_by"
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "parameters": {
+          "eventId": {
+            "in": "query",
+            "param_type": "uuid",
+            "maps_to": "tasks.event_id filter"
+          },
+          "assigneeId": {
+            "in": "query",
+            "param_type": "uuid",
+            "maps_to": "tasks.assignee_id filter"
+          }
+        },
+        "response": {
+          "200": { "maps_to": "tasks rows matching filters & RLS" }
+        }
+      }
+    },
+    "/tasks/{id}/transition": {
+      "method": "post",
+      "parameters": {
+        "id": { "in": "path", "param_type": "uuid", "maps_to": "tasks.id" }
+      },
+      "requestBody": {
+        "toState": {
+          "param_type": "string",
+          "maps_to": "transition action performed: will update tasks.state_key (API must validate permitted transition via workflow_transitions)"
+        },
+        "comment": {
+          "param_type": "string",
+          "maps_to": "remarks.remark + audit_logs.comment (mandatory non-empty). API must fail if missing."
+        }
+      },
+      "response": {
+        "200": {
+          "maps_to": "audit_logs row returned as AuditLog schema (write by API/service role)"
+        }
+      }
+    },
+    "/audit/{eventId}": {
+      "method": "get",
+      "parameters": {
+        "eventId": {
+          "in": "path",
+          "param_type": "uuid",
+          "maps_to": "audit_logs.event_id filter; API should order by created_at asc"
+        }
+      },
+      "response": {
+        "200": {
+          "maps_to": "SELECT * FROM audit_logs WHERE event_id = :eventId AND RLS allows access"
+        }
+      }
+    }
+  },
+  "audit": {
+    "prd_vs_openapi_conflicts": [
+      {
+        "issue": "PRD enforces 'tasks per event <= 20' and 'users per event <= 10'. OpenAPI has no such fields/constraints.",
+        "resolution": "Constraint enforced at API layer. DB includes no hard limit but API must check on event creation/task creation and return error if limits exceeded."
+      },
+      {
+        "issue": "PRD mandates strict state machine (TODO->WIP<->BLOCKED ...). OpenAPI's Task.state is a free string.",
+        "resolution": "Workflow state machine encoded in workflow_states/workflow_transitions; API must validate transitions. DB stores state_key (string) and transitions table defines allowed moves."
+      },
+      {
+        "issue": "PRD requires mandatory remark on reassignment and state change; OpenAPI mentions comment optional in some schemas.",
+        "resolution": "API MUST enforce remark presence. DB remarks.remark is NOT NULL; RLS ensures INSERT remark.user_id = app_current_user_id()."
+      },
+      {
+        "issue": "PRD wants Admins to be able to override; OpenAPI lacks explicit admin override endpoints.",
+        "resolution": "Provide API-level override routes that write to audit_logs with a flag (warning or admin_override). DB supports writing warnings; role-based check uses role_members table."
+      }
+    ]
+  },
+  "notes": {
+    "rationale": "All flattened fields from OpenAPI were normalized into separate tables. Arrays in OpenAPI (workflow.states / transitions) are stored in normalized tables. Auto-create tasks are stored as JSON templates; API translates templates to concrete task rows at runtime.",
+    "rls": "RLS policies only allow authenticated users to read data when they are event members or global admins (DB-backed). All write constraints (e.g., allowed transitions) must be enforced by the API. RLS uses helper functions app_is_event_member and app_is_global_admin for checks.",
+    "concurrency": "Use app_acquire_task_lock and app_release_task_lock from the API when performing multi-step task updates to avoid race conditions. Lock expires after 5 minutes by logic in acquire function (configurable)."
+  }
+}

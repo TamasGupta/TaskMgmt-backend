@@ -1,0 +1,61 @@
+Traceback (most recent call last):
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\base.py", line 251, in _catch_revision_errors
+    yield
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\base.py", line 459, in _upgrade_revs
+    for script in reversed(list(revs))
+                           ^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 813, in iterate_revisions
+    revisions, heads = fn(
+                       ^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 1466, in _collect_upgrade_revisions
+    current_revisions = self.get_revisions(lower)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 543, in get_revisions
+    return sum([self.get_revisions(id_elem) for id_elem in id_], ())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 566, in get_revisions
+    return tuple(
+           ^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 567, in <genexpr>
+    self._revision_for_ident(rev_id, branch_label)
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\revision.py", line 638, in _revision_for_ident
+    raise ResolutionError(
+alembic.script.revision.ResolutionError: No such revision or branch 'a7555de44768'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 10, in <module>
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\command.py", line 403, in upgrade
+    script.run_env()
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\base.py", line 583, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\util\pyfiles.py", line 95, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\util\pyfiles.py", line 113, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Asus\Desktop\Mine\TaskMgmt-backend\backend\alembic\env.py", line 71, in <module>
+    run_migrations_online()
+  File "C:\Users\Asus\Desktop\Mine\TaskMgmt-backend\backend\alembic\env.py", line 65, in run_migrations_online
+    context.run_migrations()
+  File "<string>", line 8, in run_migrations
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\runtime\environment.py", line 948, in run_migrations
+    self.get_context().run_migrations(**kw)
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\runtime\migration.py", line 615, in run_migrations
+    for step in self._migrations_fn(heads, self):
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\command.py", line 392, in upgrade
+    return script._upgrade_revs(revision, rev)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\base.py", line 447, in _upgrade_revs
+    with self._catch_revision_errors(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\Asus\AppData\Local\Programs\Python\Python312\Lib\site-packages\alembic\script\base.py", line 283, in _catch_revision_errors
+    raise util.CommandError(resolution) from re
+alembic.util.exc.CommandError: Can't locate revision identified by 'a7555de44768'
